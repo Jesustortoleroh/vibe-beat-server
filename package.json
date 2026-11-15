@@ -24,12 +24,12 @@
   "author": "Jesus Tortolero",
   "type": "commonjs",
   "config": {
-    "mongodbMemoryServer": {
-      "version": "7.0.14",
-      "arch": "x64",
-      "platform": "win32"
-    }
-  },
+  "mongodbMemoryServer": {
+    "version": "7.0.14",
+    "arch": "x64",
+    "platform": "linux"
+  }
+},
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
