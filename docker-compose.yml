@@ -22,7 +22,7 @@ services:
   # MongoDB Database
   mongo:
     image: mongo:latest
-    container_name: vibe-beat-db          # ← renombrado
+    container_name: vibe-beat-db
     ports:
       - '27017:27017'
     volumes:

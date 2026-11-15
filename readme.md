@@ -64,6 +64,7 @@ The project is fully containerized. You can run the API and MongoDB together usi
 2.  Build and start the containers:
     ```bash
     docker compose up --build
+    ```
 
 ## 🔗 Links
 

@@ -27,9 +27,9 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:3000', 
+  'http://localhost:3000',
   'https://vibe-beat-client.onrender.com',
-  'https://cse341-music-playlists-client.onrender.com',
+  'https://cse341-music-playlists-client.onrender.com'
 ];
 
 // Standard middleware
@@ -39,7 +39,7 @@ app
     cors({
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        
+
         if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.onrender.com')) {
           callback(null, true);
         } else {
@@ -63,9 +63,9 @@ app
       }),
       cookie: {
         secure: process.env.NODE_ENV === 'production',
-        httpOnly: true, 
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
-        maxAge: 1000 * 60 * 60 * 24 
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 1000 * 60 * 60 * 24
       }
     })
   )

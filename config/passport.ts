@@ -28,10 +28,10 @@ export default (passport: PassportStatic) => {
           clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
           callbackURL:
             process.env.NODE_ENV === 'production'
-              ? 'https://vibe-beat-server.onrender.com/auth/github/callback' // URL ACTUALIZADA
+              ? 'https://vibe-beat-server.onrender.com/auth/github/callback' // URl Updated
               : 'http://localhost:3000/auth/github/callback',
           passReqToCallback: false,
-          proxy: true 
+          proxy: true
         },
         async (
           accessToken: string,
@@ -73,7 +73,7 @@ export default (passport: PassportStatic) => {
           clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
           callbackURL:
             process.env.NODE_ENV === 'production'
-              ? 'https://vibe-beat-server.onrender.com/auth/google/callback' // URL ACTUALIZADA
+              ? 'https://vibe-beat-server.onrender.com/auth/google/callback' // URL Updated
               : 'http://localhost:3000/auth/google/callback',
           passReqToCallback: true,
           proxy: true
