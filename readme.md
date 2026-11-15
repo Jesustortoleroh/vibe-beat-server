@@ -57,8 +57,6 @@ The project uses **Jest** and **Supertest** for integration testing. To ensure t
 npm test
 ```
 
-````
-
 - **Coverage:** Tests cover User Registration, Playlist CRUD, Auth routes (Passport), and GraphQL queries/mutations.
 - **CI/CD:** A GitHub Actions workflow (`.github/workflows/ci.yml`) runs the linter, format check, tests, and build on every push to `main`.
 
@@ -92,7 +90,3 @@ The project is fully containerized. You can run the API and MongoDB together usi
 - **Repository:** https://github.com/Jesustortoleroh/vibe-beat-server
 - **API (Render):** https://vibe-beat-server.onrender.com
 - **Swagger docs:** https://vibe-beat-server.onrender.com/api-docs
-
-```
-
-````
