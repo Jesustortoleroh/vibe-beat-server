@@ -41,7 +41,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:4173', // <-- Añade esta línea
+  'http://localhost:4173',
   'http://localhost:3000',
   'https://vibe-beat-client.onrender.com'
 ];
@@ -93,12 +93,12 @@ export const createApolloServer = (httpServer?: http.Server): ApolloServer<Graph
   return new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
-    introspection: process.env.NODE_ENV !== 'production',
+    // ✅ Habilitado para que Apollo Sandbox funcione en Render
+    introspection: true,
     plugins: [
       ...(httpServer ? [ApolloServerPluginDrainHttpServer({ httpServer })] : []),
-      ...(process.env.NODE_ENV !== 'production'
-        ? [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
-        : [])
+      // Mostrar la interfaz gráfica de Apollo en todos los entornos para facilitar las pruebas
+      ApolloServerPluginLandingPageLocalDefault({ embed: true })
     ]
   });
 };
@@ -110,35 +110,22 @@ if (isTest) {
   const testApollo = createApolloServer();
   apolloReady = (async () => {
     await testApollo.start();
-    // Mount Apollo BEFORE routes so it catches /graphql
+    // En tests, Apollo va ANTES de las rutas
     app.use(
       '/graphql',
       expressMiddleware(testApollo, {
         context: async ({ req, res }) => ({ req, res })
       })
     );
+    app.use('/', routes);
+    app.use((_req, res) => {
+      res.status(404).json({ success: false, message: 'Route not found' });
+    });
   })();
 }
 
-// --- MONTAJE DE RUTAS Y 404 ---
-// We wait for Apollo before mounting routes ONLY in tests.
-const setupRoutes = async () => {
-  await apolloReady;
-  app.use('/', routes);
-
-  // 404 handler (must be last)
-  app.use((_req, res) => {
-    res.status(404).json({ success: false, message: 'Route not found' });
-  });
-};
-
-// Execute setup asynchronously (Express will use the app once resolved)
-setupRoutes();
-
-// Export the app for testing purposes
 export { app };
 
-// --- INICIO DEL SERVIDOR REAL ---
 const startServer = async (): Promise<void> => {
   try {
     await db.mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000, family: 4 });
@@ -148,12 +135,21 @@ const startServer = async (): Promise<void> => {
     const apolloServer = createApolloServer(httpServer);
     await apolloServer.start();
 
+    // ✅ 1. Apollo PRIMERO
     app.use(
       '/graphql',
       expressMiddleware(apolloServer, {
         context: async ({ req, res }) => ({ req, res })
       })
     );
+
+    // ✅ 2. Rutas REST DESPUÉS
+    app.use('/', routes);
+
+    // ✅ 3. 404 al final
+    app.use((_req, res) => {
+      res.status(404).json({ success: false, message: 'Route not found' });
+    });
 
     httpServer.listen(port, () => {
       console.log(`Server running on port ${port}.`);
