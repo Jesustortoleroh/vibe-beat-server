@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # ✅ Cambio clave
+    runs-on: ubuntu-22.04 
 
     strategy:
       matrix:
@@ -43,6 +43,7 @@ jobs:
           NODE_ENV: test
           SESSION_SECRET: test-secret-for-ci
           MONGO_URI: mongodb://127.0.0.1:27017/test
+          MONGOMS_PLATFORM: linux 
 
       - name: Build Project
         run: npm run build
