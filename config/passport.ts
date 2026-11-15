@@ -9,11 +9,8 @@ import { Request } from 'express';
 import * as userController from '../controllers/user';
 import { IUser } from '../models/User';
 
-// Match Passport's verify callback signature for this project.
-// The user argument is not `null` on a successful/failed auth callback.
 type VerifyCallback = (error: Error | null, user?: IUser | false) => void;
 
-// Define the structure of the GitHub email response
 interface GitHubEmail {
   email: string;
   primary: boolean;
@@ -22,7 +19,6 @@ interface GitHubEmail {
 }
 
 export default (passport: PassportStatic) => {
-  // Only initialize OAuth strategies if not in test environment
   if (process.env.NODE_ENV !== 'test') {
     // --- GITHUB STRATEGY ---
     passport.use(
@@ -32,9 +28,10 @@ export default (passport: PassportStatic) => {
           clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
           callbackURL:
             process.env.NODE_ENV === 'production'
-              ? 'https://cse341-music-playlists-ts.onrender.com/auth/github/callback' // <-- CORREGIDO
+              ? 'https://vibe-beat-server.onrender.com/auth/github/callback' // URL ACTUALIZADA
               : 'http://localhost:3000/auth/github/callback',
-          passReqToCallback: false
+          passReqToCallback: false,
+          proxy: true 
         },
         async (
           accessToken: string,
@@ -76,9 +73,10 @@ export default (passport: PassportStatic) => {
           clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
           callbackURL:
             process.env.NODE_ENV === 'production'
-              ? 'https://cse341-music-playlists-ts.onrender.com/auth/google/callback' // <-- CORREGIDO
+              ? 'https://vibe-beat-server.onrender.com/auth/google/callback' // URL ACTUALIZADA
               : 'http://localhost:3000/auth/google/callback',
-          passReqToCallback: true
+          passReqToCallback: true,
+          proxy: true
         },
         async (
           req: Request,
@@ -104,8 +102,6 @@ export default (passport: PassportStatic) => {
     );
   }
 
-  // --- SESSION MANAGEMENT ---
-  // Serialize user to store in session (saves user ID in the cookie)
   passport.serializeUser((user: any, done: (err: Error | null, id?: string) => void) => {
     const sessionUser = user as IUser & {
       _id?: string | { toString(): string };
@@ -116,7 +112,6 @@ export default (passport: PassportStatic) => {
     done(null, userId ? userId.toString() : undefined);
   });
 
-  // Deserialize user from session (retrieves user from DB on each request)
   passport.deserializeUser(async (id: string, done) => {
     try {
       const user = await userController.getUserByIdForAuth(id);

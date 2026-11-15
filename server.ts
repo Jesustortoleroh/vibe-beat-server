@@ -25,13 +25,29 @@ const app: Application = express();
 // Trust the reverse proxy (Render) to ensure secure cookies are set correctly
 app.set('trust proxy', 1);
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000', 
+  'https://vibe-beat-client.onrender.com',
+  'https://cse341-music-playlists-client.onrender.com',
+];
+
 // Standard middleware
 app
   .use(helmet({ contentSecurityPolicy: false }))
   .use(
     cors({
-      origin: 'https://vibe-beat-client.onrender.com', // Frontend URL
-      credentials: true // Allow cookies to be sent cross-origin
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.onrender.com')) {
+          callback(null, true);
+        } else {
+          console.error(`CORS blocked for origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      credentials: true
     })
   )
   .use(express.json({ limit: '10kb' }))
@@ -43,29 +59,25 @@ app
       saveUninitialized: false,
       store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI as string,
-        ttl: 14 * 24 * 60 * 60 // Session time to live
+        ttl: 14 * 24 * 60 * 60
       }),
       cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        httpOnly: true, // Prevent client-side JavaScript from reading the cookie
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site cookies in production
-        maxAge: 1000 * 60 * 60 * 24 // Cookie expiration time
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true, 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
+        maxAge: 1000 * 60 * 60 * 24 
       }
     })
   )
   .use(passport.initialize())
   .use(passport.session());
 
-// Initialize Passport authentication strategies
 initializePassport(passport);
 
-// Mount API routes
 app.use('/', routes);
 
-// Export app for testing purposes
 export { app };
 
-// Create HTTP server and Apollo Server instance
 const httpServer = http.createServer(app);
 const apolloServer = new ApolloServer({
   typeDefs,
@@ -77,7 +89,6 @@ const apolloServer = new ApolloServer({
   ]
 });
 
-// Database connection and server startup
 const startServer = async (): Promise<void> => {
   try {
     if (!db.url) {
@@ -87,10 +98,8 @@ const startServer = async (): Promise<void> => {
     await db.mongoose.connect(db.url);
     console.log('MongoDB connected');
 
-    // Start Apollo Server before mounting middleware
     await apolloServer.start();
 
-    // Mount Apollo middleware for GraphQL
     app.use(
       '/graphql',
       expressMiddleware(apolloServer, {
@@ -98,7 +107,6 @@ const startServer = async (): Promise<void> => {
       })
     );
 
-    // Start listening on the HTTP server
     httpServer.listen(port, () => {
       console.log(`DB Connected and server running on port ${port}.`);
       console.log(`API Documentation at http://localhost:${port}/api-docs`);
@@ -114,7 +122,6 @@ const startServer = async (): Promise<void> => {
   }
 };
 
-// Start the server only if this module is run directly
 if (require.main === module) {
   startServer();
 }
