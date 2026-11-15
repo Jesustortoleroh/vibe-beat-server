@@ -1,6 +1,3 @@
-Aquí tienes el código Markdown completo para tu `README.md`. Puedes copiar todo el bloque y pegarlo directamente en tu archivo.
-
-````markdown
 # 🎵 Vibe Beat API - TypeScript, GraphQL & REST
 
 REST and GraphQL API for managing music playlists. Vibe Beat Project.
@@ -59,6 +56,7 @@ The project uses **Jest** and **Supertest** for integration testing. To ensure t
 ```bash
 npm test
 ```
+
 ````
 
 - **Coverage:** Tests cover User Registration, Playlist CRUD, Auth routes (Passport), and GraphQL queries/mutations.
@@ -97,4 +95,4 @@ The project is fully containerized. You can run the API and MongoDB together usi
 
 ```
 
-```
+````
