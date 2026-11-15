@@ -87,6 +87,8 @@ The project is fully containerized. You can run the API and MongoDB together usi
 
 ## 🔗 Links
 
-- **Repository:** https://github.com/Jesustortoleroh/vibe-beat-server
-- **API (Render):** https://vibe-beat-server.onrender.com
-- **Swagger docs:** https://vibe-beat-server.onrender.com/api-docs
+- **Repository:** https://github.com/Jesustortoleroh/vibe-beat-client
+- **Live App (Render):** https://vibe-beat-client.onrender.com
+- **Backend API:** https://vibe-beat-server.onrender.com
+- **API Documentation (Swagger):** https://vibe-beat-server.onrender.com/api-docs
+- **GraphQL Playground (Apollo Sandbox):** https://vibe-beat-server.onrender.com/graphql
