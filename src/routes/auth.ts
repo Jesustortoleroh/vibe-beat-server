@@ -12,13 +12,19 @@ const ensureAuthenticated = (req: Request, res: Response, next: NextFunction): v
   res.status(401).json({ success: false, message: 'Not authenticated' });
 };
 
+// ✅ Determinamos la URL del frontend según el entorno
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
 // --- GITHUB ROUTES ---
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
 router.get(
   '/github/callback',
   passport.authenticate('github', { failureRedirect: '/auth/login?error=github' }),
-  (_req: Request, res: Response) => res.redirect('/auth/profile')
+  (_req: Request, res: Response) => {
+    // Redirigimos al frontend en lugar de a /auth/profile
+    res.redirect(CLIENT_URL);
+  }
 );
 
 // --- GOOGLE ROUTES ---
@@ -27,7 +33,10 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/auth/login?error=google' }),
-  (_req: Request, res: Response) => res.redirect('/auth/profile')
+  (_req: Request, res: Response) => {
+    // Redirigimos al frontend
+    res.redirect(CLIENT_URL);
+  }
 );
 
 // --- PROTECTED PROFILE ROUTE ---
