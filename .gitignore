@@ -1,10 +1,30 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-.DS_Store
-Thumbs.db
+.env.test
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# Test coverage
+coverage/
+
+# Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
-dist/
-cse341-music-playlists-client.code-workspace
+*.code-workspace
+
+# MongoDB Memory Server cache (sometimes creates local binaries)
+.mongodb-binaries/

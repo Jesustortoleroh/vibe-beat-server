@@ -1,6 +1,23 @@
 import request from 'supertest';
-import { describe, it, expect } from '@jest/globals';
-import { app } from '../server'; // Import the Express app from server.ts
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+
+// ✅ Set environment variables BEFORE importing the app
+process.env.NODE_ENV = 'test';
+process.env.SESSION_SECRET = 'test-secret';
+process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/placeholder';
+
+import { connectDB, closeDB } from './setup/dbSetup';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { app } = require('../src/server');
+
+beforeAll(async () => {
+  await connectDB();
+});
+
+afterAll(async () => {
+  await closeDB();
+});
 
 describe('API Basic Tests', () => {
   it('should return 200 OK on the root route', async () => {

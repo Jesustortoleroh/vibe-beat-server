@@ -7,7 +7,7 @@ import swaggerRoutes from './swagger';
 const router: Router = express.Router();
 
 // Welcome route for the root URL
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (_req: Request, res: Response) => {
   res.json({
     message: '🎵 Welcome to the Music Playlists API - CSE 341',
     documentation: '/api-docs',
@@ -27,5 +27,10 @@ router.use('/auth', authRoutes);
 
 // Swagger Documentation
 router.use('/', swaggerRoutes);
+
+// 404 handler (must be after all routes)
+router.use((_req: Request, res: Response) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
 
 export default router;

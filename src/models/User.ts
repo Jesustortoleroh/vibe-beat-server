@@ -1,12 +1,13 @@
 import bcrypt from 'bcryptjs';
-import { Model, Schema, HydratedDocument, Mongoose } from 'mongoose';
+import { Model, Schema, HydratedDocument, Mongoose, Types } from 'mongoose';
 
 export interface IUser {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   password?: string;
   role: 'user' | 'admin';
-  provider?: 'local' | 'github' | 'google';
+  provider: 'local' | 'github' | 'google';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -29,8 +30,9 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: false,
-      minlength: [6, 'Password must be at least 6 characters long']
+      minlength: [6, 'Password must be at least 6 characters long'],
+      // Excluded from queries by default; use .select('+password') to include
+      select: false
     },
     role: {
       type: String,
@@ -46,16 +48,19 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Hash password before saving (with correct 'this' type)
+// Hash password before saving (Mongoose 9: async function, no callback)
 userSchema.pre<HydratedDocument<IUser>>('save', async function () {
   if (!this.isModified('password') || !this.password) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Factory pattern with typed mongoose instance
+// Factory pattern with typed mongoose instance and overwrite protection
 const createUserModel = (mongooseInstance: Mongoose): Model<IUser> => {
-  return mongooseInstance.model<IUser>('users', userSchema);
+  return (
+    (mongooseInstance.models.User as Model<IUser>) ||
+    mongooseInstance.model<IUser>('User', userSchema)
+  );
 };
 
 export default createUserModel;

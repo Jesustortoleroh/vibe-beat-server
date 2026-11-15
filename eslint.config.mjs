@@ -5,6 +5,8 @@ import globals from 'globals';
 
 export default [
   js.configs.recommended,
+
+  // Rules for TypeScript files
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -27,8 +29,31 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },
+
+  // Rules for JavaScript setup files (Jest setup files)
   {
-    // Ignore compiled files and config files
-    ignores: ['node_modules/', 'dist/', 'swagger.json', '*.js']
+    files: ['tests/setup/**/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node
+      }
+    }
+  },
+
+  // Keep ES modules such as this ESLint config in module mode
+  {
+    files: ['*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: {
+        ...globals.node
+      }
+    }
+  },
+
+  // Ignore compiled files and auto-generated files
+  {
+    ignores: ['node_modules/', 'dist/', 'coverage/', 'swagger.json']
   }
 ];

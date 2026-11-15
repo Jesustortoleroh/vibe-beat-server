@@ -5,13 +5,15 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon --exec tsx server.ts",
-    "build": "tsc",
-    "swagger": "tsx swagger.ts",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "dev": "nodemon --exec tsx src/server.ts",
+    "build": "tsc && shx cp swagger.json dist/",
+    "swagger": "tsx src/swagger.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "jest"
+    "format:check": "prettier --check .",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "music",
@@ -21,10 +23,16 @@
   ],
   "author": "Jesus Tortolero",
   "type": "commonjs",
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "7.0.14",
+      "arch": "x64",
+      "platform": "win32"
+    }
+  },
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
-    "@typescript/native": "npm:typescript@^7.0.2",
     "bcryptjs": "^3.0.3",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
@@ -35,17 +43,15 @@
     "express-validator": "^7.3.2",
     "graphql": "^16.14.2",
     "helmet": "^8.3.0",
-    "mongoose": "^9.11.4",
+    "mongoose": "^8.24.9",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "swagger-autogen": "^2.23.7",
-    "swagger-ui-express": "^5.0.1",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
@@ -58,14 +64,18 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.13.0",
     "globals": "^17.13.0",
     "jest": "^30.5.2",
     "jiti": "^2.7.0",
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.10",
+    "shx": "^0.4.0",
     "supertest": "^7.3.2",
     "ts-jest": "^29.4.15",
-    "tsx": "^4.23.15"
+    "tsx": "^4.23.15",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

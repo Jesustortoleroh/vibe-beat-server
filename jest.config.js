@@ -1,12 +1,15 @@
+/* global module */
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/*.test.ts'], // Search for test files with .test.ts extension
-  setupFiles: ['<rootDir>/jest.setup.js'],
+  testMatch: ['<rootDir>/tests/**/*.test.ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }]
   },
   verbose: true,
+  clearMocks: true,
   forceExit: true,
-  clearMocks: true
+  maxWorkers: 1,
+  testTimeout: 30000
 };

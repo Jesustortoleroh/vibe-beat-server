@@ -26,11 +26,25 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev
 
+      - name: Check Formatting
+        run: npm run format:check
+
       - name: Run Linter
         run: npm run lint
 
       - name: Run Tests
         run: npm test
+        env:
+          NODE_ENV: test
+          # Provide mock secrets so server.ts doesn't throw on import
+          SESSION_SECRET: test-secret-for-ci
+          MONGO_URI: mongodb://127.0.0.1:27017/test
 
       - name: Build Project
         run: npm run build
+
+      - name: Verify Build Output
+        run: |
+          # Ensure the compiled server and swagger files exist
+          test -f dist/server.js
+          test -f dist/swagger.json

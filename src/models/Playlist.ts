@@ -1,8 +1,10 @@
-import { Model, Schema, Mongoose } from 'mongoose';
+import { Model, Schema, Mongoose, Types } from 'mongoose';
 
 export interface IPlaylist {
+  _id: Types.ObjectId;
   name: string;
   description?: string;
+  // TODO: confirm if this should be Types.ObjectId with ref: 'User'
   creator: string;
   genre: string;
   songs: string[];
@@ -69,9 +71,12 @@ const playlistSchema = new Schema<IPlaylist>(
   { timestamps: true }
 );
 
-// Factory pattern with typed mongoose instance
+// Factory pattern with typed mongoose instance and overwrite protection
 const createPlaylistModel = (mongooseInstance: Mongoose): Model<IPlaylist> => {
-  return mongooseInstance.model<IPlaylist>('playlists', playlistSchema);
+  return (
+    (mongooseInstance.models.Playlist as Model<IPlaylist>) ||
+    mongooseInstance.model<IPlaylist>('Playlist', playlistSchema)
+  );
 };
 
 export default createPlaylistModel;
