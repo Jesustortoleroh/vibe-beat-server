@@ -21,16 +21,7 @@ router.get('/', (_req: Request, res: Response) => {
 // API Routes
 router.use('/api/users', userRoutes);
 router.use('/api/playlists', playlistRoutes);
-
-// Auth Routes
 router.use('/auth', authRoutes);
-
-// Swagger Documentation
 router.use('/', swaggerRoutes);
-
-// 404 handler (must be after all routes)
-router.use((_req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
-});
 
 export default router;
