@@ -2,11 +2,11 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Music Playlists API',
-    description: 'API for managing music playlists and users - CSE 341 Project',
+    title: 'Vibe Beat API',
+    description: 'API for managing music playlists and users - Vibe Beat',
     version: '1.0.0'
   },
-  host: 'cse341-music-playlists.onrender.com',
+  host: 'vibe-beat-server.onrender.com',
   schemes: ['https'],
   basePath: '/',
   // Add security definitions for OAuth session cookies

@@ -1,7 +1,7 @@
 {
-  "name": "cse341-music-playlists",
+  "name": "vibe-beat-server",
   "version": "1.0.0",
-  "description": "Music Playlists API - CSE 341 Project",
+  "description": "Music Playlists API - Vibe Beat",
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",

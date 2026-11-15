@@ -2,7 +2,7 @@ services:
   # Your Node.js API
   api:
     build: .
-    container_name: music-playlists-api
+    container_name: vibe-beat-server
     ports:
       - '3000:3000'
     environment:
@@ -15,18 +15,18 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     restart: always
 
   # MongoDB Database
   mongo:
     image: mongo:latest
-    container_name: music-playlists-db
+    container_name: vibe-beat-db          # ← renombrado
     ports:
       - '27017:27017'
     volumes:
       - mongo-data:/data/db
-    # --- HEALTHCHECK ---
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 10s

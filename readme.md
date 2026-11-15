@@ -1,10 +1,10 @@
-# 🎵 Music Playlists API - TypeScript & GraphQL
+# 🎵 Vibe Beat API - TypeScript & GraphQL
 
-REST API for managing music playlists. CSE 341 Project - BYU-Idaho.
+REST API for managing music playlists. Vibe Beat Project.
 
 ## 📋 Description
 
-This API allows users to manage music playlists. It includes a complete CRUD system with GET, POST, PUT, and DELETE endpoints for both playlists and users. It also features **OAuth 2.0 authentication** (GitHub and Google), data validation, error handling, and auto-generated Swagger documentation. The entire backend is built with **TypeScript** and follows a **Service Layer** architecture. It also includes a **GraphQL** endpoint (Extra Credit).
+This API allows users to manage music playlists. It includes a complete CRUD system with GET, POST, PUT, and DELETE endpoints for both playlists and users. It also features **OAuth 2.0 authentication** (GitHub and Google), data validation, error handling, and auto-generated Swagger documentation. The entire backend is built with **TypeScript** and follows a **Service Layer** architecture. It also includes a **GraphQL** endpoint.
 
 ## 🚀 Technologies
 
@@ -64,3 +64,9 @@ The project is fully containerized. You can run the API and MongoDB together usi
 2.  Build and start the containers:
     ```bash
     docker compose up --build
+
+## 🔗 Links
+
+- **Repository:** https://github.com/Jesustortoleroh/vibe-beat-server
+- **API (Render):** https://vibe-beat-server.onrender.com
+- **Swagger docs:** https://vibe-beat-server.onrender.com/api-docs

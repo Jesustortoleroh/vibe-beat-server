@@ -30,7 +30,7 @@ app
   .use(helmet({ contentSecurityPolicy: false }))
   .use(
     cors({
-      origin: 'https://cse341-music-playlists-client.onrender.com', // Frontend URL
+      origin: 'https://vibe-beat-client.onrender.com', // Frontend URL
       credentials: true // Allow cookies to be sent cross-origin
     })
   )
