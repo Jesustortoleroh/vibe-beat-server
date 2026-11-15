@@ -28,11 +28,13 @@ afterAll(async () => {
 
 describe('POST /api/users (User Registration)', () => {
   // Helper function to register a user directly via HTTP
-  const registerUser = async (userData = {
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'StrongP@ss123'
-  }) => {
+  const registerUser = async (
+    userData = {
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'StrongP@ss123'
+    }
+  ) => {
     return await request(app).post('/api/users').send(userData);
   };
 
@@ -49,10 +51,10 @@ describe('POST /api/users (User Registration)', () => {
 
   it('should hash the password before saving to the database', async () => {
     // Create the user for this specific test
-    await registerUser(); 
+    await registerUser();
 
     const userInDb = await db.User.findOne({ email: 'test@example.com' }).select('+password');
-    
+
     expect(userInDb).toBeDefined();
     expect(userInDb!.password).toBeDefined();
     expect(userInDb!.password).not.toBe('StrongP@ss123');
@@ -66,7 +68,7 @@ describe('POST /api/users (User Registration)', () => {
     await registerUser();
 
     const userInDb = await db.User.findOne({ email: 'test@example.com' });
-    
+
     expect(userInDb).toBeDefined();
     expect(userInDb!.role).toBe('user');
   });
@@ -84,13 +86,11 @@ describe('POST /api/users (User Registration)', () => {
   });
 
   it('should return 400 Bad Request for invalid input (weak password)', async () => {
-    const res = await request(app)
-      .post('/api/users')
-      .send({
-        name: 'Weak Password',
-        email: 'weak@example.com',
-        password: '123' // Too short, fails isStrongPassword
-      });
+    const res = await request(app).post('/api/users').send({
+      name: 'Weak Password',
+      email: 'weak@example.com',
+      password: '123' // Too short, fails isStrongPassword
+    });
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
