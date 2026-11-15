@@ -41,6 +41,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:4173', // <-- Añade esta línea
   'http://localhost:3000',
   'https://vibe-beat-client.onrender.com'
 ];
