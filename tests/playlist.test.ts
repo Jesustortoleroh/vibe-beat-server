@@ -12,7 +12,10 @@ import { connectDB, closeDB, clearDB } from './setup/dbSetup';
 jest.mock('../src/middlewares/auth', () => ({
   ensureAuthenticated: (req: any, res: any, next: any) => {
     // Inject a fake user into the request to simulate a logged-in user
-    req.user = { _id: '507f1f77bcf86cd799439011', role: 'user' };
+    req.user = {
+      _id: req.headers['x-test-user-id'] || '507f1f77bcf86cd799439011',
+      role: 'user'
+    };
     next();
   },
   ensureAdmin: (req: any, res: any, next: any) => next()
@@ -96,6 +99,26 @@ describe('Playlist API', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty('_id');
       expect(res.body.data.name).toBe(validPlaylist.name);
+      expect(res.body.data.creator).toBe('507f1f77bcf86cd799439011');
+    });
+
+    it('should not require or accept a client-supplied creator', async () => {
+      const res = await request(app)
+        .post('/api/playlists')
+        .send({ ...validPlaylist, creator: 'Someone Else' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.creator).toBe('507f1f77bcf86cd799439011');
+    });
+
+    it('should create a playlist when creator is omitted', async () => {
+      const res = await request(app).post('/api/playlists').send({
+        name: validPlaylist.name,
+        genre: validPlaylist.genre
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.creator).toBe('507f1f77bcf86cd799439011');
     });
 
     it('should return 400 Bad Request for invalid data (missing name)', async () => {
@@ -113,7 +136,8 @@ describe('Playlist API', () => {
 
       const updateData = {
         name: 'Updated Playlist Name',
-        genre: 'pop'
+        genre: 'pop',
+        creator: '507f191e810c19729de860ea'
       };
 
       const res = await request(app).put(`/api/playlists/${created._id}`).send(updateData);
@@ -122,6 +146,7 @@ describe('Playlist API', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe(updateData.name);
       expect(res.body.data.genre).toBe(updateData.genre);
+      expect(res.body.data.creator).toBe('507f1f77bcf86cd799439011');
     });
 
     it('should return 404 if playlist to update is not found', async () => {
@@ -130,6 +155,17 @@ describe('Playlist API', () => {
         .send({ name: 'New Name' });
 
       expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject updates by a different user', async () => {
+      const created = await createTestPlaylist();
+      const res = await request(app)
+        .put(`/api/playlists/${created._id}`)
+        .set('x-test-user-id', '507f191e810c19729de860ea')
+        .send({ name: 'Hijacked Playlist' });
+
+      expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
     });
 
@@ -165,6 +201,16 @@ describe('Playlist API', () => {
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
+    });
+
+    it('should reject deletes by a different user', async () => {
+      const created = await createTestPlaylist();
+      const res = await request(app)
+        .delete(`/api/playlists/${created._id}`)
+        .set('x-test-user-id', '507f191e810c19729de860ea');
+
+      expect(res.status).toBe(403);
+      expect(await db.Playlist.findById(created._id)).not.toBeNull();
     });
   });
 });

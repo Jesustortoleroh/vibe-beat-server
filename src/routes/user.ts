@@ -33,8 +33,8 @@ router.post('/', userValidationRules, validate, userController.createUser);
 // #swagger.tags = ['Users']
 // #swagger.summary = 'Create a new user'
 
-// GET user by ID (Authenticated; ideally self or admin only)
-router.get('/:id', ensureAuthenticated, userController.getUserById);
+// GET user by ID (Self or admin only)
+router.get('/:id', ensureAuthenticated, isOwnerOrAdmin, userController.getUserById);
 // #swagger.tags = ['Users']
 // #swagger.summary = 'Get user by ID'
 // #swagger.parameters['id'] = { description: 'User ID' }
@@ -44,7 +44,7 @@ router.put(
   '/:id',
   ensureAuthenticated,
   isOwnerOrAdmin,
-  userUpdateRules, // ✅ Reglas donde password es opcional
+  userUpdateRules,
   validate,
   userController.updateUser
 );

@@ -36,7 +36,12 @@ export default (passport: PassportStatic) => {
           done: VerifyCallback
         ) => {
           try {
-            let email = profile.emails?.[0]?.value ?? null;
+            let email =
+              profile.emails?.find(
+                (candidate) =>
+                  (candidate as { primary?: boolean; verified?: boolean }).primary &&
+                  (candidate as { verified?: boolean }).verified
+              )?.value ?? null;
 
             // GitHub may not expose emails in the profile; fetch them explicitly
             if (!email) {
@@ -48,8 +53,10 @@ export default (passport: PassportStatic) => {
               }
               const emails = (await response.json()) as GitHubEmail[];
               const primaryEmail = emails.find((e) => e.primary && e.verified);
-              // Fallback to a synthetic email if no verified primary email exists
-              email = primaryEmail?.email ?? `${profile.username}@github.com`;
+              email = primaryEmail?.email ?? null;
+            }
+            if (!email) {
+              return done(new Error('GitHub account did not provide a verified email address'));
             }
 
             const userData = {
@@ -59,7 +66,7 @@ export default (passport: PassportStatic) => {
 
             const user = await userService.findOrCreateOAuthUser(userData, 'github');
             if (!user) {
-              return done(new Error('Failed to find or create OAuth user'));
+              return done(null, false, { message: 'This email is already linked to another provider' });
             }
             return done(null, user);
           } catch (err: unknown) {
@@ -88,10 +95,11 @@ export default (passport: PassportStatic) => {
           done: VerifyCallback
         ) => {
           try {
-            const email = profile.emails?.[0]?.value;
-            // Google may not return an email if the scope was denied
+            const email = profile.emails?.find(
+              (candidate) => (candidate as { verified?: boolean }).verified
+            )?.value;
             if (!email) {
-              return done(new Error('Google account did not provide an email address'));
+              return done(new Error('Google account did not provide a verified email address'));
             }
 
             const userData = {
@@ -101,7 +109,7 @@ export default (passport: PassportStatic) => {
 
             const user = await userService.findOrCreateOAuthUser(userData, 'google');
             if (!user) {
-              return done(new Error('Failed to find or create OAuth user'));
+              return done(null, false, { message: 'This email is already linked to another provider' });
             }
             return done(null, user);
           } catch (err: unknown) {

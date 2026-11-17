@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, it, expect, beforeAll, afterEach, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterEach, afterAll, jest } from '@jest/globals';
 import bcrypt from 'bcryptjs';
 
 // Set environment variables BEFORE importing the app
@@ -9,10 +9,23 @@ process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/placeholder';
 
 import { connectDB, closeDB, clearDB } from './setup/dbSetup';
 
+jest.mock('../src/middlewares/auth', () => ({
+  ensureAuthenticated: (req: any, res: any, next: any) => {
+    req.user = {
+      _id: req.headers['x-test-user-id'] || '507f1f77bcf86cd799439011',
+      role: 'user'
+    };
+    next();
+  },
+  ensureAdmin: (req: any, res: any, next: any) => next()
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { app } = require('../src/server');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const db = require('../src/models').default;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const userService = require('../src/services/user.service');
 
 beforeAll(async () => {
   await connectDB();
@@ -95,5 +108,38 @@ describe('POST /api/users (User Registration)', () => {
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.errors).toBeDefined();
+  });
+
+  it('should hash a password changed by the account owner', async () => {
+    const registered = await registerUser();
+    const res = await request(app)
+      .put(`/api/users/${registered.body.data._id}`)
+      .set('x-test-user-id', registered.body.data._id)
+      .send({ password: 'NewStrongP@ss123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).not.toHaveProperty('password');
+    const userInDb = await db.User.findById(registered.body.data._id).select('+password');
+    expect(userInDb!.password).not.toBe('NewStrongP@ss123');
+    expect(await bcrypt.compare('NewStrongP@ss123', userInDb!.password!)).toBe(true);
+  });
+
+  it('should not expose another user by ID', async () => {
+    const registered = await registerUser();
+    const res = await request(app)
+      .get(`/api/users/${registered.body.data._id}`)
+      .set('x-test-user-id', '507f191e810c19729de860ea');
+
+    expect(res.status).toBe(403);
+  });
+
+  it('should not link an existing local account to OAuth implicitly', async () => {
+    await registerUser();
+    const user = await userService.findOrCreateOAuthUser(
+      { name: 'OAuth User', email: 'test@example.com' },
+      'google'
+    );
+
+    expect(user).toBeNull();
   });
 });

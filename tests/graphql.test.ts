@@ -13,8 +13,8 @@ jest.mock('passport', () => ({
     req.isAuthenticated = () => req.headers['x-test-authenticated'] === 'true';
     if (req.isAuthenticated()) {
       req.user = {
-        _id: '507f1f77bcf86cd799439011',
-        id: '507f1f77bcf86cd799439011',
+        _id: req.headers['x-test-user-id'] || '507f1f77bcf86cd799439011',
+        id: req.headers['x-test-user-id'] || '507f1f77bcf86cd799439011',
         role: 'user',
         name: 'GraphQL Tester',
         email: 'gql@test.com'
@@ -111,5 +111,72 @@ describe('GraphQL API', () => {
     expect(payload.errors).toEqual([]);
     expect(payload.playlist.name).toBe('GraphQL Playlist');
     expect(payload.playlist.genre).toBe('POP');
+  });
+
+  it('should require authentication for playlist mutations', async () => {
+    const res = await request(app).post('/graphql').send({
+      query: `
+        mutation {
+          deletePlaylist(id: "507f1f77bcf86cd799439011") {
+            success
+          }
+        }
+      `
+    });
+
+    expect(res.body.errors[0].extensions.code).toBe('UNAUTHENTICATED');
+  });
+
+  it('should map the hip-hop genre to the GraphQL enum', async () => {
+    const res = await request(app)
+      .post('/graphql')
+      .set('x-test-authenticated', 'true')
+      .send({
+        query: `
+          mutation CreatePlaylist($input: PlaylistInput!) {
+            createPlaylist(input: $input) {
+              playlist { genre }
+            }
+          }
+        `,
+        variables: {
+          input: { name: 'Hip Hop Playlist', genre: 'HIP_HOP' }
+        }
+      });
+
+    expect(res.body.errors).toBeUndefined();
+    expect(res.body.data.createPlaylist.playlist.genre).toBe('HIP_HOP');
+  });
+
+  it('should prevent another user from changing a playlist', async () => {
+    const created = await request(app)
+      .post('/graphql')
+      .set('x-test-authenticated', 'true')
+      .send({
+        query: `
+          mutation {
+            createPlaylist(input: { name: "Owned Playlist", genre: POP }) {
+              playlist { id }
+            }
+          }
+        `
+      });
+    const playlistId = created.body.data.createPlaylist.playlist.id;
+
+    const updated = await request(app)
+      .post('/graphql')
+      .set('x-test-authenticated', 'true')
+      .set('x-test-user-id', '507f191e810c19729de860ea')
+      .send({
+        query: `
+          mutation {
+            updatePlaylist(id: "${playlistId}", input: { name: "Stolen Playlist" }) {
+              playlist { id }
+            }
+          }
+        `
+      });
+
+    expect(updated.body.errors[0].extensions.code).toBe('FORBIDDEN');
   });
 });

@@ -9,19 +9,48 @@ interface GraphQLContext {
   req: Request;
 }
 
+type AuthenticatedUser = {
+  _id?: string | mongoose.Types.ObjectId;
+  id?: string;
+  name?: string;
+  role?: string;
+};
+
+const getCurrentUser = (context: GraphQLContext): AuthenticatedUser | undefined =>
+  context.req.user as AuthenticatedUser | undefined;
+
+const getUserId = (user: AuthenticatedUser): string | undefined =>
+  (typeof user._id === 'string' ? user._id : user._id?.toString()) ?? user.id;
+
+const requireUser = (context: GraphQLContext): AuthenticatedUser & { id: string } => {
+  const user = getCurrentUser(context);
+  const id = user && getUserId(user);
+  if (!user || !id) {
+    throw new GraphQLError('Not authenticated', {
+      extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } }
+    });
+  }
+  return { ...user, id };
+};
+
+const canManagePlaylist = (user: AuthenticatedUser, creator: string): boolean =>
+  user.role === 'admin' || getUserId(user) === creator;
+
 export const resolvers = {
   // Resolver for the Playlist type to handle relationships and enums
   Playlist: {
     id: (parent: { _id: mongoose.Types.ObjectId }) => parent._id.toString(),
-    creator: (parent: { creator: string | mongoose.Types.ObjectId }) => {
-      // Mock a user object since creator is stored as a string
-      if (typeof parent.creator === 'string') {
-        return { id: parent.creator, name: parent.creator };
+    creator: async (parent: { creator: string | mongoose.Types.ObjectId }) => {
+      const creatorId = parent.creator.toString();
+      if (mongoose.Types.ObjectId.isValid(creatorId)) {
+        const user = await userService.getUserById(creatorId);
+        if (user) return user;
       }
-      return { id: parent.creator.toString(), name: 'Unknown User' };
+      return { id: creatorId, name: creatorId };
     },
     // Map the lowercase value from DB to the uppercase Enum expected by GraphQL
-    genre: (parent: { genre: string }) => parent.genre.toUpperCase()
+    genre: (parent: { genre: string }) =>
+      parent.genre === 'hip-hop' ? 'HIP_HOP' : parent.genre.toUpperCase()
   },
 
   Query: {
@@ -32,12 +61,8 @@ export const resolvers = {
       return await playlistService.getPlaylistById(id);
     },
     users: async (_: unknown, _args: unknown, context: GraphQLContext) => {
-      if (!context.req.user) {
-        throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } }
-        });
-      }
-      if ((context.req.user as { role?: string }).role !== 'admin') {
+      const currentUser = requireUser(context);
+      if (currentUser.role !== 'admin') {
         throw new GraphQLError('Not authorized', {
           extensions: { code: 'FORBIDDEN', http: { status: 403 } }
         });
@@ -45,13 +70,8 @@ export const resolvers = {
       return await userService.getAllUsers();
     },
     user: async (_: unknown, { id }: { id: string }, context: GraphQLContext) => {
-      if (!context.req.user) {
-        throw new GraphQLError('Not authenticated', {
-          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } }
-        });
-      }
-      const currentUser = context.req.user as { id?: string; role?: string };
-      if (currentUser.role !== 'admin' && currentUser.id !== id) {
+      const currentUser = requireUser(context);
+      if (currentUser.role !== 'admin' && getUserId(currentUser) !== id) {
         throw new GraphQLError('Not authorized', {
           extensions: { code: 'FORBIDDEN', http: { status: 403 } }
         });
@@ -65,14 +85,13 @@ export const resolvers = {
       { input }: { input: Partial<IPlaylist> },
       context: GraphQLContext
     ) => {
+      const user = requireUser(context);
       try {
-        const creator = input.creator || (context.req.user as any)?.name || 'Unknown';
-
         // GraphQL sends uppercase enums (e.g., "POP"), Mongoose expects lowercase ("pop")
         const processedInput = {
           ...input,
-          creator,
-          genre: input.genre?.toLowerCase()
+          creator: user.id,
+          genre: input.genre?.toLowerCase().replace(/_/g, '-')
         };
 
         const playlist = await playlistService.createPlaylist(processedInput);
@@ -96,12 +115,27 @@ export const resolvers = {
     },
     updatePlaylist: async (
       _: unknown,
-      { id, input }: { id: string; input: Partial<IPlaylist> }
+      { id, input }: { id: string; input: Partial<IPlaylist> },
+      context: GraphQLContext
     ) => {
+      const user = requireUser(context);
       try {
+        const existingPlaylist = await playlistService.getPlaylistById(id);
+        if (!existingPlaylist) {
+          return {
+            playlist: null,
+            errors: [{ message: 'Playlist not found', field: 'id' }]
+          };
+        }
+        if (!canManagePlaylist(user, existingPlaylist.creator)) {
+          throw new GraphQLError('Not authorized', {
+            extensions: { code: 'FORBIDDEN', http: { status: 403 } }
+          });
+        }
+
         const processedInput = {
           ...input,
-          genre: input.genre?.toLowerCase()
+          genre: input.genre?.toLowerCase().replace(/_/g, '-')
         };
         const playlist = await playlistService.updatePlaylist(id, processedInput);
 
@@ -126,8 +160,22 @@ export const resolvers = {
         throw err;
       }
     },
-    deletePlaylist: async (_: unknown, { id }: { id: string }) => {
+    deletePlaylist: async (_: unknown, { id }: { id: string }, context: GraphQLContext) => {
+      const user = requireUser(context);
       try {
+        const existingPlaylist = await playlistService.getPlaylistById(id);
+        if (!existingPlaylist) {
+          return {
+            success: false,
+            errors: [{ message: 'Playlist not found', field: 'id' }]
+          };
+        }
+        if (!canManagePlaylist(user, existingPlaylist.creator)) {
+          throw new GraphQLError('Not authorized', {
+            extensions: { code: 'FORBIDDEN', http: { status: 403 } }
+          });
+        }
+
         const deleted = await playlistService.deletePlaylist(id);
         if (!deleted) {
           return {

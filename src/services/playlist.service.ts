@@ -40,7 +40,6 @@ export const updatePlaylist = async (
   const updateData = {
     name: playlistData.name,
     description: playlistData.description,
-    creator: playlistData.creator,
     genre: playlistData.genre,
     songs: playlistData.songs,
     isPublic: playlistData.isPublic,

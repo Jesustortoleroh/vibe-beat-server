@@ -213,7 +213,6 @@
       "properties": {
         "name": { "type": "string", "example": "My Awesome Playlist" },
         "description": { "type": "string", "example": "A collection of my favorite songs" },
-        "creator": { "type": "string", "example": "Jesus Tortolero" },
         "genre": { "type": "string", "example": "jazz" },
         "songs": {
           "type": "array",
@@ -230,7 +229,7 @@
         "_id": { "type": "string", "example": "66abc123def4567890abcdef" },
         "name": { "type": "string", "example": "My Awesome Playlist" },
         "description": { "type": "string", "example": "A collection of my favorite songs" },
-        "creator": { "type": "string", "example": "Jesus Tortolero" },
+        "creator": { "type": "string", "example": "66abc123def4567890abcdef" },
         "genre": { "type": "string", "example": "jazz" },
         "songs": {
           "type": "array",

@@ -44,7 +44,6 @@ export const userUpdateRules: ValidationChain[] = [
 // --- PLAYLIST RULES ---
 export const playlistCreateRules: ValidationChain[] = [
   body('name').trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
-  body('creator').notEmpty().withMessage('Creator is required'),
   body('genre')
     .isIn([
       'rock',
@@ -74,7 +73,6 @@ export const playlistUpdateRules: ValidationChain[] = [
     .trim()
     .isLength({ min: 3 })
     .withMessage('Name must be at least 3 characters'),
-  body('creator').optional().notEmpty().withMessage('Creator cannot be empty'),
   body('genre')
     .optional()
     .isIn([

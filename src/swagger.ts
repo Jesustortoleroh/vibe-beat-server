@@ -23,7 +23,6 @@ const doc = {
     PlaylistInput: {
       name: 'My Awesome Playlist',
       description: 'A collection of my favorite songs',
-      creator: 'Jesus Tortolero',
       genre: 'jazz',
       songs: ['Take Five - Dave Brubeck'],
       isPublic: true,
@@ -33,7 +32,7 @@ const doc = {
       _id: '66abc123def4567890abcdef',
       name: 'My Awesome Playlist',
       description: 'A collection of my favorite songs',
-      creator: 'Jesus Tortolero',
+      creator: '66abc123def4567890abcdef',
       genre: 'jazz',
       songs: ['Take Five - Dave Brubeck'],
       isPublic: true,

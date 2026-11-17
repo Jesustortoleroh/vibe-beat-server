@@ -2,6 +2,18 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import * as playlistService from '../services/playlist.service';
 
+type AuthenticatedUser = {
+  _id?: string | { toString(): string };
+  id?: string;
+  role?: string;
+};
+
+const getUserId = (user: AuthenticatedUser): string | undefined =>
+  (typeof user._id === 'string' ? user._id : user._id?.toString()) ?? user.id;
+
+const canManagePlaylist = (user: AuthenticatedUser, creator: string): boolean =>
+  user.role === 'admin' || getUserId(user) === creator;
+
 // Centralized error handler for Mongoose and generic errors
 const handleError = (err: unknown, res: Response, fallbackMessage: string): void => {
   if (err instanceof mongoose.Error.CastError) {
@@ -49,7 +61,14 @@ export const getPlaylistById = async (
 // POST create new playlist
 export const createPlaylist = async (req: Request, res: Response): Promise<void> => {
   try {
-    const savedPlaylist = await playlistService.createPlaylist(req.body);
+    const user = req.user as AuthenticatedUser | undefined;
+    const creator = user && getUserId(user);
+    if (!creator) {
+      res.status(401).json({ success: false, message: 'Not authenticated' });
+      return;
+    }
+
+    const savedPlaylist = await playlistService.createPlaylist({ ...req.body, creator });
     res.status(201).json({ success: true, data: savedPlaylist });
   } catch (err: unknown) {
     handleError(err, res, 'Some error occurred while creating the playlist.');
@@ -63,6 +82,17 @@ export const updatePlaylist = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const user = req.user as AuthenticatedUser | undefined;
+    const playlist = await playlistService.getPlaylistById(id);
+    if (!playlist) {
+      res.status(404).json({ success: false, message: 'Playlist not found' });
+      return;
+    }
+    if (!user || !canManagePlaylist(user, playlist.creator)) {
+      res.status(403).json({ success: false, message: 'Not authorized to perform this action' });
+      return;
+    }
+
     const updatedPlaylist = await playlistService.updatePlaylist(id, req.body);
     if (!updatedPlaylist) {
       res.status(404).json({ success: false, message: 'Playlist not found' });
@@ -81,6 +111,17 @@ export const deletePlaylist = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const user = req.user as AuthenticatedUser | undefined;
+    const playlist = await playlistService.getPlaylistById(id);
+    if (!playlist) {
+      res.status(404).json({ success: false, message: 'Playlist not found' });
+      return;
+    }
+    if (!user || !canManagePlaylist(user, playlist.creator)) {
+      res.status(403).json({ success: false, message: 'Not authorized to perform this action' });
+      return;
+    }
+
     const deletedPlaylist = await playlistService.deletePlaylist(id);
     if (!deletedPlaylist) {
       res.status(404).json({ success: false, message: 'Playlist not found' });

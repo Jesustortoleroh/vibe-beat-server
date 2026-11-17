@@ -37,16 +37,18 @@ export const createUser = async (
 export const updateUser = async (
   id: string,
   userData: Pick<IUser, 'name' | 'email' | 'password'>
-): Promise<HydratedDocument<IUser> | null> => {
-  const updateData: Partial<Pick<IUser, 'name' | 'email' | 'password'>> = {};
-  if (userData.name !== undefined) updateData.name = userData.name;
-  if (userData.email !== undefined) updateData.email = userData.email;
-  if (userData.password !== undefined) updateData.password = userData.password;
+): Promise<Partial<IUser> | null> => {
+  const user = await User.findById(id);
+  if (!user) return null;
 
-  return await User.findByIdAndUpdate(id, updateData, {
-    returnDocument: 'after', // Mongoose 9.2+: replaces deprecated `new: true`
-    runValidators: true
-  });
+  if (userData.name !== undefined) user.name = userData.name;
+  if (userData.email !== undefined) user.email = userData.email;
+  if (userData.password !== undefined) user.password = userData.password;
+
+  const updatedUser = await user.save();
+  const userResponse = updatedUser.toObject();
+  delete userResponse.password;
+  return userResponse;
 };
 
 // Delete a user
@@ -61,14 +63,7 @@ export const findOrCreateOAuthUser = async (
 ): Promise<HydratedDocument<IUser> | null> => {
   const currentUser = await User.findOne({ email: profile.email });
   if (currentUser) {
-    // IMPORTANT: If the existing account is local, do not silently link it to OAuth.
-    // This is an account-takeover vector if the email is not verified by the provider.
-    // Return the user only if the provider matches or the account is already OAuth.
-    if (currentUser.provider === 'local') {
-      // TODO: implement explicit account linking flow or return null
-      return currentUser; // Temporary: return as-is; revisit security policy
-    }
-    return currentUser;
+    return currentUser.provider === provider ? currentUser : null;
   }
 
   const newUser = new User({
