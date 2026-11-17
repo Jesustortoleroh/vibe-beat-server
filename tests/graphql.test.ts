@@ -114,15 +114,17 @@ describe('GraphQL API', () => {
   });
 
   it('should require authentication for playlist mutations', async () => {
-    const res = await request(app).post('/graphql').send({
-      query: `
+    const res = await request(app)
+      .post('/graphql')
+      .send({
+        query: `
         mutation {
           deletePlaylist(id: "507f1f77bcf86cd799439011") {
             success
           }
         }
       `
-    });
+      });
 
     expect(res.body.errors[0].extensions.code).toBe('UNAUTHENTICATED');
   });

@@ -66,7 +66,9 @@ export default (passport: PassportStatic) => {
 
             const user = await userService.findOrCreateOAuthUser(userData, 'github');
             if (!user) {
-              return done(null, false, { message: 'This email is already linked to another provider' });
+              return done(null, false, {
+                message: 'This email is already linked to another provider'
+              });
             }
             return done(null, user);
           } catch (err: unknown) {
@@ -109,7 +111,9 @@ export default (passport: PassportStatic) => {
 
             const user = await userService.findOrCreateOAuthUser(userData, 'google');
             if (!user) {
-              return done(null, false, { message: 'This email is already linked to another provider' });
+              return done(null, false, {
+                message: 'This email is already linked to another provider'
+              });
             }
             return done(null, user);
           } catch (err: unknown) {
